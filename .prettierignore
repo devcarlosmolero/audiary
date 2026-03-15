@@ -1,0 +1,10 @@
+# Ignore artifacts:
+node_modules
+build
+dist
+coverage
+
+# Ignore Tauri files:
+target
+src-tauri
+dist-tauri

@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-red: hsl(0deg 100% 63%);
+  --color-orange: hsl(33deg 100% 60%);
+  --color-yellow: hsl(54deg 100% 50%);
+  --color-green: hsl(135deg 72% 47%);
+  --color-mint: hsl(175deg 100% 39%);
+  --color-teal: hsl(180deg 100% 39%);
+  --color-cyan: hsl(195deg 100% 46%);
+  --color-blue: hsl(210deg 100% 50%);
+  --color-indigo: hsl(250deg 75% 60%);
+  --color-purple: hsl(290deg 75% 58%);
+  --color-pink: hsl(340deg 100% 60%);
+  --color-brown: hsl(25deg 25% 50%);
+  --color-primary-fill: hsl(0deg 0% 0%);
+  --color-secondary-fill: hsl(0deg 0% 0%);
+  --color-tertiary-fill: hsl(0deg 0% 0%);
+  --color-quaternary-fill: hsl(0deg 0% 0%);
+  --color-quinary-fill: hsl(0deg 0% 0%);
+  --color-primary-vibrant-fill: hsl(0deg 0% 85%);
+  --color-secondary-vibrant-fill: hsl(0deg 0% 90%);
+  --color-tertiary-vibrant-fill: hsl(0deg 0% 95%);
+  --color-quaternary-vibrant-fill: hsl(0deg 0% 97%);
+  --color-quinary-vibrant-fill: hsl(0deg 0% 98%);
+  --color-primary-label: hsl(0deg 0% 0%);
+  --color-secondary-label: hsl(0deg 0% 0%);
+  --color-tertiary-label: hsl(0deg 0% 0%);
+  --color-quaternary-label: hsl(0deg 0% 0%);
+  --color-quinary-label: hsl(0deg 0% 0%);
+  --color-white-label: hsl(0deg 0% 100%);
+  --color-seximal-label: hsl(0deg 0% 0%);
+  --color-primary-vibrant-label: hsl(0deg 0% 10%);
+  --color-secondary-vibrant-label: hsl(0deg 0% 45%);
+  --color-tertiary-vibrant-label: hsl(0deg 0% 75%);
+  --color-quaternary-vibrant-label: hsl(0deg 0% 85%);
+  --color-quinary-vibrant-label: hsl(0deg 0% 90%);
+  --color-material-ultra-thick: hsl(0deg 0% 96%);
+  --color-material-thick: hsl(0deg 0% 96%);
+  --color-material-medium: hsl(0deg 0% 96%);
+  --color-material-thin: hsl(0deg 0% 96%);
+  --color-material-ultra-thin: hsl(0deg 0% 96%);
+  --color-black: hsl(0deg 0% 0%);
+  --color-white: hsl(0deg 0% 100%);
+  --color-gray: hsl(0deg 0% 56%);
+  --color-neutral-idle-glyph: hsl(0deg 0% 10%);
+  --color-neutral-disabled-glyph: hsl(0deg 0% 75%);
+  --color-primary-idle-glyph: hsl(0deg 0% 100%);
+  --color-primary-disabled-glyph: hsl(0deg 0% 100%);
+  --color-red-vibrant: hsl(0deg 95% 59%);
+  --color-orange-vibrant: hsl(30deg 95% 58%);
+  --color-yellow-vibrant: hsl(50deg 100% 48%);
+  --color-green-vibrant: hsl(140deg 70% 45%);
+  --color-mint-vibrant: hsl(170deg 100% 37%);
+  --color-teal-vibrant: hsl(180deg 75% 44%);
+  --color-cyan-vibrant: hsl(190deg 100% 40%);
+  --color-blue-vibrant: hsl(210deg 100% 48%);
+  --color-indigo-vibrant: hsl(250deg 80% 55%);
+  --color-purple-vibrant: hsl(290deg 70% 45%);
+  --color-pink-vibrant: hsl(350deg 95% 58%);
+  --color-brown-vibrant: hsl(25deg 20% 45%);
+  --color-separator-vibrant: hsl(220deg 10% 20%);
+  --color-control-tint: hsl(210deg 95% 50%);
+  --color-control-destructive-red: hsl(0deg 100% 63%);
+}
+
+@layer base {
+  .dark {
+    @apply bg-zinc-800;
+  }
+
+  .light {
+    @apply bg-zinc-100;
+  }
+}

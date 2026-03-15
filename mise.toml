@@ -1,0 +1,8 @@
+
+[tools]
+bun = "latest"
+rust = "stable"
+
+
+[env]
+NODE_ENV = "development"
