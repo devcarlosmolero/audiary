@@ -1,5 +1,17 @@
 use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri_plugin_dialog::DialogExt;
+use lofty::AudioFile as LoftyAudioFile;
+use lofty::Probe;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct AudioFile {
+    name: String,
+    path: String,
+    extension: String,
+    bitrate: Option<u32>,
+    size_mb: f64,
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -30,6 +42,7 @@ pub fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![get_audio_files])
         .on_menu_event(|app, event| {
             if event.id() == "select-folder" {
                 app.dialog().file().pick_folder(|folder| {
@@ -41,4 +54,65 @@ pub fn run() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+#[tauri::command]
+async fn get_audio_files(folder_path: String) -> Result<Vec<AudioFile>, String> {
+    let path = std::path::Path::new(&folder_path);
+    let mut audio_files = Vec::new();
+
+    if !path.exists() {
+        return Err("Folder does not exist".to_string());
+    }
+
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for entry in entries.flatten() {
+            let entry_path = entry.path();
+            let file_name = entry.file_name();
+            let file_name_str = file_name.to_string_lossy();
+            
+            // Skip hidden files (files starting with .)
+            if file_name_str.starts_with('.') {
+                continue;
+            }
+            
+            if let Some(extension) = entry_path.extension() {
+                let extension_str = extension.to_string_lossy().to_lowercase();
+                if ["mp3", "wav", "flac", "ogg", "m4a", "aac"].contains(&extension_str.as_str()) {
+                    let metadata = match std::fs::metadata(&entry_path) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            eprintln!("Error getting metadata for file {}: {:?}", entry_path.display(), e);
+                            continue;
+                        }
+                    };
+                    let size_mb = metadata.len() as f64 / (1024.0 * 1024.0);
+                    
+                    let bitrate = match Probe::open(&entry_path) {
+                        Ok(probe) => match probe.read() {
+                            Ok(tagged_file) => tagged_file.properties().overall_bitrate().map(|b| b as u32),
+                            Err(e) => {
+                                eprintln!("Error reading file {}: {:?}", entry_path.display(), e);
+                                None
+                            }
+                        },
+                        Err(e) => {
+                            eprintln!("Error probing file {}: {:?}", entry_path.display(), e);
+                            None
+                        }
+                    };
+
+                    audio_files.push(AudioFile {
+                        name: file_name_str.into_owned(),
+                        path: entry_path.to_string_lossy().into_owned(),
+                        extension: extension_str,
+                        bitrate,
+                        size_mb,
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(audio_files)
+}
 }

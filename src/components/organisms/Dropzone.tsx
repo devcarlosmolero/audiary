@@ -1,9 +1,24 @@
+import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
 
 import Button from "../atoms/Button";
 
-export default function Dropzone({ label }: { label: string }) {
+interface AudioFile {
+  name: string;
+  path: string;
+  extension: string;
+  bitrate: number | null;
+  size_mb: number;
+}
+
+export default function Dropzone({
+  label,
+  onFilesSelected,
+}: {
+  label: string;
+  onFilesSelected?: (files: AudioFile[]) => void;
+}) {
   const [folderPath, setFolderPath] = useState<string | null>(null);
 
   const handleSelectFolder = async () => {
@@ -15,6 +30,12 @@ export default function Dropzone({ label }: { label: string }) {
       });
       if (selectedPath) {
         setFolderPath(selectedPath);
+        const audioFiles = await invoke<AudioFile[]>("get_audio_files", {
+          folderPath: selectedPath,
+        });
+        if (onFilesSelected) {
+          onFilesSelected(audioFiles);
+        }
       }
     } catch (error) {
       console.error("Error selecting folder:", error);
