@@ -9,7 +9,7 @@ interface AudioFile {
   extension: string;
   bitrate: number | null;
   sizeMb: number;
-  albumCover?: string; // Optional album cover path or URL
+  albumCover?: string;
 }
 
 function App() {
