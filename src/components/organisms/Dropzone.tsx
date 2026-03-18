@@ -9,7 +9,8 @@ interface AudioFile {
   path: string;
   extension: string;
   bitrate: number | null;
-  size_mb: number;
+  sizeMb: number;
+  albumCover?: string; // Optional album cover path or URL
 }
 
 export default function Dropzone({

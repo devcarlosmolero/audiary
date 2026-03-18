@@ -2,7 +2,9 @@ use tauri::menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri_plugin_dialog::DialogExt;
 use lofty::AudioFile as LoftyAudioFile;
 use lofty::Probe;
+use lofty::TaggedFileExt;
 use serde::{Serialize, Deserialize};
+use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Serialize, Deserialize)]
 struct AudioFile {
@@ -10,7 +12,10 @@ struct AudioFile {
     path: String,
     extension: String,
     bitrate: Option<u32>,
+    #[serde(rename = "sizeMb")]
     size_mb: f64,
+    #[serde(rename = "albumCover")]
+    album_cover: Option<String>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -87,27 +92,45 @@ async fn get_audio_files(folder_path: String) -> Result<Vec<AudioFile>, String> 
                     };
                     let size_mb = metadata.len() as f64 / (1024.0 * 1024.0);
                     
-                    let bitrate = match Probe::open(&entry_path) {
-                        Ok(probe) => match probe.read() {
-                            Ok(tagged_file) => tagged_file.properties().overall_bitrate().map(|b| b as u32),
-                            Err(e) => {
-                                eprintln!("Error reading file {}: {:?}", entry_path.display(), e);
-                                None
-                            }
-                        },
-                        Err(e) => {
-                            eprintln!("Error probing file {}: {:?}", entry_path.display(), e);
-                            None
-                        }
-                    };
+                     let (bitrate, album_cover) = match Probe::open(&entry_path) {
+                         Ok(probe) => match probe.read() {
+                             Ok(tagged_file) => {
+                                 let bitrate = tagged_file.properties().overall_bitrate().map(|b| b as u32);
+                                 
+                                 // Extract album cover if available
+                                 let album_cover = tagged_file.primary_tag()
+                                     .and_then(|tag: &lofty::Tag| tag.pictures().first())
+                                     .and_then(|picture: &lofty::Picture| {
+                                         let mime_type = picture.mime_type().map(|m| m.to_string());
+                                         if let Some(mime) = &mime_type {
+                                             if mime == "image/jpeg" || mime == "image/png" {
+                                                 return Some(format!("data:{};base64,{}", mime, general_purpose::STANDARD.encode(picture.data())));
+                                             }
+                                         }
+                                         None
+                                     });
+                                 
+                                 (bitrate, album_cover)
+                             }
+                             Err(e) => {
+                                 eprintln!("Error reading file {}: {:?}", entry_path.display(), e);
+                                 (None, None)
+                             }
+                         },
+                         Err(e) => {
+                             eprintln!("Error probing file {}: {:?}", entry_path.display(), e);
+                             (None, None)
+                         }
+                     };
 
-                    audio_files.push(AudioFile {
-                        name: file_name_str.into_owned(),
-                        path: entry_path.to_string_lossy().into_owned(),
-                        extension: extension_str,
-                        bitrate,
-                        size_mb,
-                    });
+                     audio_files.push(AudioFile {
+                         name: file_name_str.into_owned(),
+                         path: entry_path.to_string_lossy().into_owned(),
+                         extension: extension_str,
+                         bitrate,
+                         size_mb,
+                         album_cover,
+                     });
                 }
             }
         }

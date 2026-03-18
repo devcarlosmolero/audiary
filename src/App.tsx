@@ -8,7 +8,8 @@ interface AudioFile {
   path: string;
   extension: string;
   bitrate: number | null;
-  size_mb: number;
+  sizeMb: number;
+  albumCover?: string; // Optional album cover path or URL
 }
 
 function App() {
@@ -27,10 +28,21 @@ function App() {
             <List.Body>
               {audioFiles.map((file, index) => (
                 <List.Row key={index} rowId={`row${index}`} onClick={() => {}}>
-                  <List.Cell isFirst>{file.name}</List.Cell>
+                  <List.Cell isFirst>
+                    <div className="flex items-center gap-2">
+                      {file.albumCover && (
+                        <img
+                          src={file.albumCover}
+                          alt="Album cover"
+                          className="w-3.5 h-3.5 object-cover"
+                        />
+                      )}
+                      {file.name}
+                    </div>
+                  </List.Cell>
                   <List.Cell>{`${file.extension.toUpperCase()} File`}</List.Cell>
                   <List.Cell>{file.bitrate ? `${file.bitrate} Kbps` : "Unknown"}</List.Cell>
-                  <List.Cell isLast>{file.size_mb.toFixed(2)} MB</List.Cell>
+                  <List.Cell isLast>{file.sizeMb.toFixed(2)} MB</List.Cell>
                 </List.Row>
               ))}
             </List.Body>
