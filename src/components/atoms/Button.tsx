@@ -23,10 +23,23 @@ interface ButtonProps extends ButtonVariants {
   children: React.ReactNode;
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }
-export default function Button({ children, variant, className, onClick, ...props }: ButtonProps) {
+export default function Button({
+  children,
+  variant,
+  className,
+  onClick,
+  disabled,
+  ...props
+}: ButtonProps) {
   return (
-    <button onClick={onClick} className={button({ variant, className })} {...props}>
+    <button
+      onClick={onClick}
+      className={button({ variant, className })}
+      disabled={disabled}
+      {...props}
+    >
       <span className="z-5 relative">{children}</span>
     </button>
   );

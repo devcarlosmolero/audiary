@@ -1,33 +1,174 @@
+import { invoke } from "@tauri-apps/api/core";
+import cn from "classnames";
+import { DotSquare, Ellipsis } from "lucide-react";
 import { useState } from "react";
 
 import Dropzone from "./components/organisms/Dropzone";
 import List from "./components/organisms/List";
-
-interface AudioFile {
-  name: string;
-  path: string;
-  extension: string;
-  bitrate: number | null;
-  sizeMb: number;
-  albumCover?: string;
-}
+import SongForm from "./components/organisms/SongForm";
+import { SongMetadata, AudioFile } from "./types";
 
 function App() {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+  const [selectedSong, setSelectedSong] = useState<SongMetadata | null>(null);
+  const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
+  const [previousAlbumCover, setPreviousAlbumCover] = useState<string | undefined>(undefined);
+
+  const handleSongSelect = (file: AudioFile, index: number) => {
+    const metadata = file.metadata || {};
+
+    const title = metadata.title || "";
+    const artist = metadata.artist || "";
+    const album = metadata.album || "";
+    const genre = metadata.genre || undefined;
+    const releaseDate = metadata.year || "";
+
+    setSelectedSong({
+      title,
+      artist,
+      album,
+      releaseDate,
+      genre,
+      albumCover: file.albumCover,
+      filePath: file.path,
+    });
+    setSelectedFileIndex(index);
+    setPreviousAlbumCover(file.albumCover);
+  };
 
   const handleFilesSelected = (files: AudioFile[]) => {
     setAudioFiles(files);
+
+    if (files.length > 0) {
+      handleSongSelect(files[0], 0);
+    }
+  };
+
+  const handleClearAlbumCover = () => {
+    if (selectedFileIndex === null || !selectedSong) return;
+
+    setSelectedSong({
+      ...selectedSong,
+      albumCover: undefined,
+    });
+
+    setAudioFiles((prevFiles) => {
+      return prevFiles.map((file, index) => {
+        if (index === selectedFileIndex) {
+          return {
+            ...file,
+            albumCover: undefined,
+          };
+        }
+        return file;
+      });
+    });
+
+    const updatedMetadata: SongMetadata = {
+      ...selectedSong,
+      albumCover: undefined,
+      filePath: selectedSong.filePath,
+    };
+
+    setPreviousAlbumCover(undefined);
+    invoke("save_metadata", { metadata: updatedMetadata }).catch((error) => {
+      console.error("Failed to clear album cover:", error);
+    });
+  };
+
+  const handleFieldChange = (field: keyof SongMetadata) => (value: string) => {
+    if (selectedSong) {
+      setSelectedSong({
+        ...selectedSong,
+        [field]: value,
+      });
+    }
+  };
+
+  const handleFieldBlur = (field: keyof SongMetadata) => () => {
+    if (!selectedSong || selectedFileIndex === null) return;
+
+    const updatedMetadata: SongMetadata = {
+      ...selectedSong,
+      [field]: selectedSong[field] || "",
+    };
+
+    invoke("save_metadata", { metadata: updatedMetadata })
+      .then(() => {
+        setAudioFiles((prevFiles) => {
+          return prevFiles.map((file, index) => {
+            if (index === selectedFileIndex) {
+              return {
+                ...file,
+                metadata: {
+                  ...file.metadata,
+                  [field]: updatedMetadata[field],
+                },
+              };
+            }
+            return file;
+          });
+        });
+      })
+      .catch((error) => {
+        console.error("Failed to save metadata:", error);
+      });
+  };
+
+  const handleImageUpload = (imageData: string, imagePath?: string) => {
+    if (!selectedSong || selectedFileIndex === null) return;
+
+    if (imageData === previousAlbumCover) {
+      return;
+    }
+
+    setSelectedSong({
+      ...selectedSong,
+      albumCover: imageData,
+    });
+
+    setAudioFiles((prevFiles) => {
+      return prevFiles.map((file, index) => {
+        if (index === selectedFileIndex) {
+          return {
+            ...file,
+            albumCover: imageData,
+          };
+        }
+        return file;
+      });
+    });
+
+    const updatedMetadata: SongMetadata = {
+      ...selectedSong,
+      albumCover: imageData,
+      albumCoverPath: imagePath,
+      filePath: selectedSong.filePath,
+    };
+
+    setPreviousAlbumCover(imageData);
+    invoke("save_metadata", { metadata: updatedMetadata }).catch((error) => {
+      console.error("Failed to save album cover:", error);
+    });
   };
 
   return (
-    <div className="p-4 h-screen">
-      <div className="flex items-start w-full h-full">
-        <div className="w-[65%] h-full flex flex-col gap-4">
-          <Dropzone label="something" onFilesSelected={handleFilesSelected} />
-          <List>
+    <div className="h-screen py-4 overflow-x-hidden">
+      <div className="flex items-start gap-4 w-full h-full">
+        <div className="w-[75%] h-full pl-4 flex flex-col gap-4">
+          {audioFiles.length === 0 && (
+            <Dropzone label="Select a folder to start" onFilesSelected={handleFilesSelected} />
+          )}
+          <List
+            className={`${cn("transition-opacity duration-700", audioFiles.length > 0 ? "opacity-100" : "opacity-0")}`}
+          >
             <List.Body>
               {audioFiles.map((file, index) => (
-                <List.Row key={index} rowId={`row${index}`} onClick={() => {}}>
+                <List.Row
+                  key={index}
+                  rowId={`row${index}`}
+                  onClick={() => handleSongSelect(file, index)}
+                >
                   <List.Cell isFirst>
                     <div className="flex items-center gap-2">
                       {file.albumCover && (
@@ -48,7 +189,20 @@ function App() {
             </List.Body>
           </List>
         </div>
-        <div className="w-[35%] h-full"></div>
+        <div
+          className={`${cn("w-[25%] relative p-4 mr-4 transition-all duration-500 shadow-xl rounded-2xl h-full bg-white/90", audioFiles.length > 0 ? "translate-x-0 opacity-100" : "translate-x-[500px] opacity-0")}`}
+        >
+          <div className="absolute right-4">
+            <Ellipsis className="w-4 h-4" />
+          </div>
+          <SongForm
+            song={selectedSong}
+            onFieldChange={handleFieldChange}
+            onFieldBlur={handleFieldBlur}
+            onClear={handleClearAlbumCover}
+            onImageUpload={handleImageUpload}
+          />
+        </div>
       </div>
     </div>
   );

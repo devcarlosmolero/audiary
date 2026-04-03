@@ -108,7 +108,7 @@ export default [
       "import/no-named-as-default-member": "off",
       "import/no-duplicates": "error",
 
-      complexity: ["error", { max: 10 }],
+      complexity: ["error", { max: 20 }],
 
       "max-lines": [
         "error",

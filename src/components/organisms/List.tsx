@@ -3,9 +3,14 @@ import { ReactNode } from "react";
 
 import { useFocusStore } from "../../hooks/useFocusStore";
 
-const List = ({ children }: { children: ReactNode }) => {
+interface ListProps {
+  children: ReactNode;
+  className?: string;
+}
+
+const List = ({ children, className }: ListProps) => {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className={cn("w-full overflow-x-auto", className)}>
       <table className="w-full border-collapse">{children}</table>
     </div>
   );
@@ -32,7 +37,7 @@ const Row = ({
       onClick={() => setFocusedRowId(rowId)}
       onDoubleClick={onClick}
       className={`${cn(
-        focusedRowId === rowId ? "!bg-[#2962D9] text-white-label" : "text-primary-label",
+        focusedRowId === rowId ? "bg-[#2962D9]! text-white-label" : "text-primary-label",
         "even:bg-quaternary-fill/3",
       )}`}
     >

@@ -1,17 +1,8 @@
-import { invoke } from "@tauri-apps/api/core";
-import { open } from "@tauri-apps/plugin-dialog";
 import { useState } from "react";
 
+import { useFileUpload } from "../../hooks/useFileUpload";
+import { AudioFile } from "../../types";
 import Button from "../atoms/Button";
-
-interface AudioFile {
-  name: string;
-  path: string;
-  extension: string;
-  bitrate: number | null;
-  sizeMb: number;
-  albumCover?: string; // Optional album cover path or URL
-}
 
 export default function Dropzone({
   label,
@@ -21,25 +12,24 @@ export default function Dropzone({
   onFilesSelected?: (files: AudioFile[]) => void;
 }) {
   const [folderPath, setFolderPath] = useState<string | null>(null);
+  const { openFileDialog, getAudioFiles, error } = useFileUpload();
 
   const handleSelectFolder = async () => {
     try {
-      const selectedPath = await open({
+      const selectedPath = await openFileDialog({
         directory: true,
         multiple: false,
         title: "Select a folder",
       });
       if (selectedPath) {
         setFolderPath(selectedPath);
-        const audioFiles = await invoke<AudioFile[]>("get_audio_files", {
-          folderPath: selectedPath,
-        });
+        const audioFiles = await getAudioFiles(selectedPath);
         if (onFilesSelected) {
           onFilesSelected(audioFiles);
         }
       }
-    } catch (error) {
-      console.error("Error selecting folder:", error);
+    } catch (err) {
+      console.error("Error selecting folder:", err);
     }
   };
 
@@ -52,7 +42,7 @@ export default function Dropzone({
             {folderPath?.replace(/\//g, " • ").replace(/^ • /, "")}
           </p>
         </div>
-        <Button variant="neutral" onClick={handleSelectFolder}>
+        <Button variant="neutral" onClick={handleSelectFolder} disabled={!!error}>
           Select folder...
         </Button>
       </div>
