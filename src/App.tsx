@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import cn from "classnames";
-import { DotSquare, Ellipsis } from "lucide-react";
+import { Ellipsis, ListChecks } from "lucide-react";
 import { useState } from "react";
 
+import Button from "./components/atoms/Button";
 import Dropzone from "./components/organisms/Dropzone";
 import List from "./components/organisms/List";
 import SongForm from "./components/organisms/SongForm";
@@ -152,6 +153,50 @@ function App() {
     });
   };
 
+  const handlePropagate = () => {
+    if (!selectedSong || selectedFileIndex === null) return;
+
+    const { artist, album, releaseDate, genre, albumCover } = selectedSong;
+
+    setAudioFiles((prevFiles) => {
+      const updatedFiles = prevFiles.map((file, index) => {
+        if (index === selectedFileIndex) return file;
+
+        return {
+          ...file,
+          albumCover: albumCover,
+          metadata: {
+            ...file.metadata,
+            artist: artist,
+            album: album,
+            year: releaseDate,
+            genre: genre,
+          },
+        };
+      });
+
+      updatedFiles.forEach((file, index) => {
+        if (index === selectedFileIndex) return;
+
+        const updatedMetadata: SongMetadata = {
+          title: file.metadata?.title || "",
+          artist: artist,
+          album: album,
+          releaseDate: releaseDate,
+          genre: genre,
+          albumCover: albumCover,
+          filePath: file.path,
+        };
+
+        invoke("save_metadata", { metadata: updatedMetadata }).catch((error) => {
+          console.error(`Failed to propagate metadata to file ${file.path}:`, error);
+        });
+      });
+
+      return updatedFiles;
+    });
+  };
+
   return (
     <div className="h-screen py-4 overflow-x-hidden">
       <div className="flex items-start gap-4 w-full h-full">
@@ -183,7 +228,20 @@ function App() {
                   </List.Cell>
                   <List.Cell>{`${file.extension.toUpperCase()} File`}</List.Cell>
                   <List.Cell>{file.bitrate ? `${file.bitrate} Kbps` : "Unknown"}</List.Cell>
-                  <List.Cell isLast>{file.sizeMb.toFixed(2)} MB</List.Cell>
+                  <List.Cell>{file.sizeMb.toFixed(2)} MB</List.Cell>
+                  <List.Cell>
+                    {selectedFileIndex === index && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={() => {}}
+                        onClick={handlePropagate}
+                        className="bg-black text-black cursor-pointer rounded-md"
+                      >
+                        <ListChecks className="w-3 h-3" />
+                      </span>
+                    )}
+                  </List.Cell>
                 </List.Row>
               ))}
             </List.Body>

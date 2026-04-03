@@ -51,16 +51,18 @@ const Cell = ({
   align = "left",
   isFirst,
   isLast,
+  className,
 }: {
   children: ReactNode;
   align?: "left" | "center" | "right";
   isFirst?: boolean;
   isLast?: boolean;
+  className?: string;
 }) => {
   return (
     <td
       style={{ textAlign: align }}
-      className={`w-fit text-sm cursor-default px-4 ${cn(isFirst && "rounded-l-xl", isLast && "rounded-r-xl")}`}
+      className={`w-fit text-sm cursor-default px-4 ${cn(isFirst && "rounded-l-xl", isLast && "rounded-r-xl", className)}`}
     >
       {children}
     </td>
