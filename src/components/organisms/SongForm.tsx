@@ -1,5 +1,3 @@
-import { Waves } from "lucide-react";
-
 import { SongMetadata } from "../../types";
 import { FormField } from "../molecules/FormFields";
 

@@ -1,9 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import cn from "classnames";
-import { Ellipsis, ListChecks } from "lucide-react";
 import { useState } from "react";
 
-import Button from "./components/atoms/Button";
 import Dropzone from "./components/organisms/Dropzone";
 import List from "./components/organisms/List";
 import SongForm from "./components/organisms/SongForm";
@@ -229,19 +227,6 @@ function App() {
                   <List.Cell>{`${file.extension.toUpperCase()} File`}</List.Cell>
                   <List.Cell>{file.bitrate ? `${file.bitrate} Kbps` : "Unknown"}</List.Cell>
                   <List.Cell>{file.sizeMb.toFixed(2)} MB</List.Cell>
-                  <List.Cell>
-                    {selectedFileIndex === index && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={() => {}}
-                        onClick={handlePropagate}
-                        className="bg-black text-black cursor-pointer rounded-md"
-                      >
-                        <ListChecks className="w-3 h-3" />
-                      </span>
-                    )}
-                  </List.Cell>
                 </List.Row>
               ))}
             </List.Body>
@@ -250,9 +235,6 @@ function App() {
         <div
           className={`${cn("w-[25%] relative p-4 mr-4 transition-all duration-500 shadow-xl rounded-2xl h-full bg-white/90", audioFiles.length > 0 ? "translate-x-0 opacity-100" : "translate-x-[500px] opacity-0")}`}
         >
-          <div className="absolute right-4">
-            <Ellipsis className="w-4 h-4" />
-          </div>
           <SongForm
             song={selectedSong}
             onFieldChange={handleFieldChange}
