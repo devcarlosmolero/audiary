@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import cn from "classnames";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Dropzone from "./components/organisms/Dropzone";
 import List from "./components/organisms/List";
 import SongForm from "./components/organisms/SongForm";
+import { useFileUpload } from "./hooks/useFileUpload";
 import { SongMetadata, AudioFile } from "./types";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
   const [selectedSong, setSelectedSong] = useState<SongMetadata | null>(null);
   const [selectedFileIndex, setSelectedFileIndex] = useState<number | null>(null);
   const [previousAlbumCover, setPreviousAlbumCover] = useState<string | undefined>(undefined);
+  const { openFileDialog, getAudioFiles } = useFileUpload();
 
   const handleSongSelect = (file: AudioFile, index: number) => {
     const metadata = file.metadata || {};
@@ -34,6 +36,38 @@ function App() {
     setSelectedFileIndex(index);
     setPreviousAlbumCover(file.albumCover);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        const handleSelection = async () => {
+          try {
+            const selectedPath = await openFileDialog({
+              directory: true,
+              multiple: false,
+              title: "Select a folder",
+            });
+            if (selectedPath) {
+              const audioFiles = await getAudioFiles(selectedPath);
+              if (audioFiles.length > 0) {
+                setAudioFiles(audioFiles);
+                handleSongSelect(audioFiles[0], 0);
+              }
+            }
+          } catch (err) {
+            console.error("Error selecting folder:", err);
+          }
+        };
+        handleSelection();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [openFileDialog, getAudioFiles, handleSongSelect]);
 
   const handleFilesSelected = (files: AudioFile[]) => {
     setAudioFiles(files);
